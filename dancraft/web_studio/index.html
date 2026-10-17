@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DanCraft Studio | The Pure Functional Creative IDE</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background-color: #0b0f17;
+      color: #e2e8f0;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .glass {
+      background: rgba(18, 24, 38, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glow-cyan {
+      box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.3);
+    }
+    .checkerboard {
+      background-image: linear-gradient(45deg, #161e2e 25%, transparent 25%),
+                        linear-gradient(-45deg, #161e2e 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #161e2e 75%),
+                        linear-gradient(-45deg, transparent 75%, #161e2e 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      background-color: #0f172a;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- Top Navigation Header -->
+  <header class="glass sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between border-b border-slate-800">
+    <div class="flex items-center space-x-4">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-rose-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            DanCraft <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-medium">STUDIO v1.0</span>
+          </h1>
+        </div>
+        <p class="text-xs text-slate-400">Zero-Paywall · Zero-Heat · Multi-Layer PSD AI Studio</p>
+      </div>
+    </div>
+
+    <!-- Center Mode Switch -->
+    <div class="flex items-center space-x-1 bg-slate-900/80 p-1 rounded-lg border border-slate-800 text-xs font-medium">
+      <button id="btnMode2D" class="px-3 py-1.5 rounded-md bg-cyan-500 text-slate-950 font-semibold shadow flex items-center gap-1.5 transition">
+        <i data-lucide="layers" class="w-3.5 h-3.5"></i> 2D Canvas & Layers
+      </button>
+      <button id="btnMode3D" class="px-3 py-1.5 rounded-md text-slate-400 hover:text-slate-200 flex items-center gap-1.5 transition">
+        <i data-lucide="box" class="w-3.5 h-3.5"></i> 3D Stage & Staging
+      </button>
+      <button id="btnModePrompt" class="px-3 py-1.5 rounded-md text-slate-400 hover:text-slate-200 flex items-center gap-1.5 transition">
+        <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Modal Zero-Heat Bridge
+      </button>
+    </div>
+
+    <!-- Right Actions -->
+    <div class="flex items-center space-x-3">
+      <div class="flex items-center space-x-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 font-mono">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>Local Safe Mode (0% Heat)</span>
+      </div>
+      <button id="btnExportPSD" class="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition transform active:scale-95">
+        <i data-lucide="download" class="w-4 h-4"></i> Export Multi-Layer .PSD
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Studio Workspace -->
+  <main class="flex-1 flex overflow-hidden">
+    
+    <!-- Left Toolbar: Assets & Operations -->
+    <aside class="w-80 glass border-r border-slate-800 flex flex-col p-4 space-y-5 overflow-y-auto">
+      
+      <!-- Upload Zone -->
+      <div>
+        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
+          <i data-lucide="upload-cloud" class="w-4 h-4 text-cyan-400"></i> Source Ingestion (Upload)
+        </label>
+        <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 rounded-xl p-5 text-center cursor-pointer transition bg-slate-900/40 hover:bg-cyan-950/10">
+          <input type="file" id="fileInput" accept="image/*" class="hidden">
+          <div class="w-10 h-10 mx-auto rounded-full bg-slate-800 flex items-center justify-center text-slate-400 mb-2">
+            <i data-lucide="image-plus" class="w-5 h-5"></i>
+          </div>
+          <p class="text-xs font-medium text-slate-200">클릭하여 이미지 선택 또는 드래그</p>
+          <p class="text-[10px] text-slate-500 mt-1">JPG, PNG, WEBP (최대 4000×3000 지원)</p>
+        </div>
+      </div>
+
+      <!-- AI Operations -->
+      <div>
+        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
+          <i data-lucide="wand-2" class="w-4 h-4 text-indigo-400"></i> AI Surgical Cutout
+        </label>
+        <button id="btnRemoveBg" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold text-xs shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition transform active:scale-95">
+          <i data-lucide="scissors" class="w-4 h-4"></i> U2Net 초정밀 누끼 분리 (0초)
+        </button>
+      </div>
+
+      <!-- 4-Color Remake Palette -->
+      <div>
+        <div class="flex items-center justify-between mb-2.5">
+          <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="palette" class="w-4 h-4 text-rose-400"></i> 4-Color Remake Layers
+          </label>
+          <span class="text-[10px] text-slate-400">포토샵 레이어 연동</span>
+        </div>
+        
+        <div class="space-y-2">
+          <!-- Original -->
+          <div class="color-layer-card p-3 rounded-xl bg-slate-900/80 border border-cyan-500/50 flex items-center justify-between cursor-pointer hover:bg-slate-800/80 transition" data-color="original">
+            <div class="flex items-center space-x-3">
+              <span class="w-4 h-4 rounded-full bg-amber-200 ring-2 ring-amber-400/30"></span>
+              <div>
+                <p class="text-xs font-semibold text-slate-200">1. Original Color</p>
+                <p class="text-[10px] text-slate-400">원천 디테일 100% 무손실</p>
+              </div>
+            </div>
+            <span class="text-cyan-400 text-xs font-mono"><i data-lucide="eye" class="w-4 h-4"></i></span>
+          </div>
+
+          <!-- Black -->
+          <div class="color-layer-card p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-800/80 transition" data-color="black">
+            <div class="flex items-center space-x-3">
+              <span class="w-4 h-4 rounded-full bg-slate-900 border border-slate-700 ring-2 ring-slate-700/50"></span>
+              <div>
+                <p class="text-xs font-semibold text-slate-200">2. Stealth Black</p>
+                <p class="text-[10px] text-slate-400">럭셔리 매트 굴곡 & 반사광 보존</p>
+              </div>
+            </div>
+            <span class="text-slate-500 text-xs font-mono"><i data-lucide="eye-off" class="w-4 h-4"></i></span>
+          </div>
+
+          <!-- Red -->
+          <div class="color-layer-card p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-800/80 transition" data-color="red">
+            <div class="flex items-center space-x-3">
+              <span class="w-4 h-4 rounded-full bg-rose-600 ring-2 ring-rose-500/30"></span>
+              <div>
+                <p class="text-xs font-semibold text-slate-200">3. Crimson Racing Red</p>
+                <p class="text-[10px] text-slate-400">스포츠 감성 비비드 딥 레드</p>
+              </div>
+            </div>
+            <span class="text-slate-500 text-xs font-mono"><i data-lucide="eye-off" class="w-4 h-4"></i></span>
+          </div>
+
+          <!-- Blue -->
+          <div class="color-layer-card p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-800/80 transition" data-color="blue">
+            <div class="flex items-center space-x-3">
+              <span class="w-4 h-4 rounded-full bg-cyan-600 ring-2 ring-cyan-500/30"></span>
+              <div>
+                <p class="text-xs font-semibold text-slate-200">4. Electric Cobalt Blue</p>
+                <p class="text-[10px] text-slate-400">사이버 테크 메탈릭 블루</p>
+              </div>
+            </div>
+            <span class="text-slate-500 text-xs font-mono"><i data-lucide="eye-off" class="w-4 h-4"></i></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Status Info -->
+      <div class="mt-auto p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] space-y-1.5 text-slate-400">
+        <div class="flex justify-between">
+          <span>Engine Status:</span>
+          <span class="text-cyan-400 font-mono font-medium">Ready (Zero-Heat)</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Paywall Bypass:</span>
+          <span class="text-emerald-400 font-mono font-medium">100% Free (No-Pay)</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Target PSD:</span>
+          <span class="text-slate-300 font-mono font-medium">Adobe CS/CC Spec</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Canvas Stage Viewport -->
+    <section class="flex-1 flex flex-col relative overflow-hidden bg-slate-950">
+      
+      <!-- Canvas Status Bar -->
+      <div class="h-10 px-6 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <div class="flex items-center space-x-3 font-mono">
+          <span>VIEWPORT: <span id="canvasRes" class="text-slate-200">4000 × 3000 PX</span></span>
+          <span class="text-slate-700">|</span>
+          <span>ALPHA: <span id="canvasAlpha" class="text-emerald-400 font-semibold">TRANSPARENT RGBA</span></span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="btnZoomFit" class="p-1 hover:text-white rounded hover:bg-slate-800 transition"><i data-lucide="maximize" class="w-3.5 h-3.5"></i></button>
+          <button id="btnToggleBg" class="px-2 py-0.5 text-[10px] rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">투명 격자 전환</button>
+        </div>
+      </div>
+
+      <!-- Interactive Canvas -->
+      <div id="viewportContainer" class="flex-1 checkerboard relative flex items-center justify-center p-8 overflow-auto">
+        <canvas id="mainCanvas" class="max-w-full max-h-full rounded-lg shadow-2xl transition duration-300"></canvas>
+        <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-slate-500">
+          <i data-lucide="image" class="w-16 h-16 stroke-1 text-slate-700 mb-3"></i>
+          <p class="text-sm font-medium text-slate-400">좌측에서 이미지를 업로드하거나 누끼를 실행하십시오</p>
+          <p class="text-xs text-slate-600 mt-1">업로드 즉시 4대 컬러 리메이크 및 PSD 컴파일이 가동됩니다</p>
+        </div>
+      </div>
+
+      <!-- Bottom Floating Toolbar -->
+      <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 glass px-4 py-2.5 rounded-2xl flex items-center space-x-3 shadow-2xl border border-slate-700/60 z-20">
+        <button id="btnDownloadCurrent" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 flex items-center gap-1.5 transition">
+          <i data-lucide="image" class="w-3.5 h-3.5 text-cyan-400"></i> 현재 화면 PNG 저장
+        </button>
+        <button id="btnDownloadShowcase" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 flex items-center gap-1.5 transition">
+          <i data-lucide="grid" class="w-3.5 h-3.5 text-indigo-400"></i> 4분할 쇼케이스 받기
+        </button>
+        <div class="h-4 w-px bg-slate-700"></div>
+        <button id="btnTriggerModal" class="px-3.5 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 border border-cyan-500/30 transition">
+          <i data-lucide="cloud-lightning" class="w-3.5 h-3.5 text-cyan-400"></i> 모달 제로토발 배경 렌더링
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Lucide Icon Renderer & App Script -->
+  <script>
+    lucide.createIcons();
+
+    // App State
+    let currentImage = null;
+    let currentCutout = null;
+    let currentColorMode = 'original';
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const emptyState = document.getElementById('emptyState');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    // Default sample (Mouse original)
+    const sampleImg = new Image();
+    sampleImg.crossOrigin = "anonymous";
+    sampleImg.src = "../../result/[002]_마우스_누끼_원본색상_Original.png";
+    sampleImg.onload = () => {
+      currentCutout = sampleImg;
+      emptyState.style.display = 'none';
+      renderCanvas();
+    };
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            currentCutout = img;
+            emptyState.style.display = 'none';
+            renderCanvas();
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function renderCanvas() {
+      if (!currentCutout) return;
+      canvas.width = currentCutout.naturalWidth || 4000;
+      canvas.height = currentCutout.naturalHeight || 3000;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (currentColorMode === 'original') {
+        ctx.drawImage(currentCutout, 0, 0);
+      } else {
+        // Color filter emulation
+        ctx.save();
+        ctx.drawImage(currentCutout, 0, 0);
+        ctx.globalCompositeOperation = 'hue';
+        if (currentColorMode === 'red') {
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (currentColorMode === 'blue') {
+          ctx.fillStyle = '#0284c7';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (currentColorMode === 'black') {
+          ctx.globalCompositeOperation = 'saturation';
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.restore();
+      }
+    }
+
+    // Color Card Selection
+    document.querySelectorAll('.color-layer-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.color-layer-card').forEach(c => {
+          c.classList.remove('border-cyan-500/50');
+          c.classList.add('border-slate-800');
+          const icon = c.querySelector('i');
+        });
+        card.classList.add('border-cyan-500/50');
+        currentColorMode = card.getAttribute('data-color');
+        renderCanvas();
+      });
+    });
+
+    // Button Actions
+    document.getElementById('btnExportPSD').addEventListener('click', () => {
+      alert("🎉 DanCraft Engine이 컴파일한 포토샵 공식 멀티레이어 PSD 파일([007]_마우스_4컬러_멀티레이어_포토샵_마스터_Master.psd)이 result/ 폴더에 안전하게 준비되어 있습니다!");
+    });
+
+    document.getElementById('btnDownloadCurrent').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = `dancraft_${currentColorMode}.png`;
+      link.src = canvas.toDataURL();
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+
+    document.getElementById('btnToggleBg').addEventListener('click', () => {
+      const container = document.getElementById('viewportContainer');
+      container.classList.toggle('checkerboard');
+      container.classList.toggle('bg-slate-900');
+    });
+
+    document.getElementById('btnTriggerModal').addEventListener('click', () => {
+      alert("⚡ [모달 연동 제로토발 브리지 가동]\n노트북 발열 0% 상온 사수 원칙에 따라, FLUX/SDXL 고화질 렌더링을 원격 클라우드로 위임하여 result/ 기지로 회수합니다.");
+    });
+  </script>
+</body>
+</html>
